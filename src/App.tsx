@@ -1,33 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import React, { useState } from 'react'
 import './App.css'
+
+function StartPad({ color }: { color: string }) {
+  const [c, setC] = useState(0);
+  const colrStyle = {
+    '--color' : color
+  } as React.CSSProperties;
+  return (
+    <>
+      <div className='startpad-outer' style = {colrStyle}>
+        <div className='startpad-inner'>
+          <div className='startpad-button-place'></div>
+          <div className='startpad-button-place'></div>
+          <div className='startpad-button-place'></div>
+          <div className='startpad-button-place'></div>
+        </div>
+      </div>
+    </>
+  );
+}
+function MovingPad({ color }: { color: string }) {
+  const [c, setC] = useState(0);
+  const colrStyle = {
+    '--color' : color
+  } as React.CSSProperties;
+  return (
+    <>
+      <div className='movingpad-container' style = {colrStyle}>
+      {[...Array(18)].map((_, index) => (
+        <div key={index} className='movingpad-cell'></div>
+      ))}
+      </div>
+    </>
+  );
+}
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className='game-board'>
+        <StartPad color='blue'/>
+        <MovingPad color='red'/>
+        <StartPad color='red'/>
+        <MovingPad color='blue'/>
+        <div></div>
+        <MovingPad color='green'/>
+        <StartPad color='yellow'/>
+        <MovingPad color='yellow'/>
+        <StartPad color='green'/>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }

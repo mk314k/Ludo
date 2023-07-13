@@ -1,42 +1,52 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+body{
+  display: flex;
+  justify-content: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+
+.game-board{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+
+.startpad-outer{
+  background-color: var(--color);
+  width: 20vmin;
+  height: 20vmin;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.startpad-inner {
+  background-color: white;
+  width: 15vmin;
+  height: 15vmin;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+
+.startpad-button-place{
+  background-color: var(--color);
+  width: 3vmin;
+  height: 3vmin;
+  border: 1px solid black;
+  border-radius: 50%;
 }
 
-.card {
-  padding: 2em;
+.movingpad-container{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 }
 
-.read-the-docs {
-  color: #888;
+.movingpad-cell{
+  border: 1px solid black;
+  width: 3vmin;
+  height: 3vmin;
 }
