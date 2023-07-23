@@ -1,3 +1,7 @@
+:root{
+  --pad-size:30vmin;
+  --button-size:calc(var(--pad-size)/6 - 1vmin - 2px);
+}
 body{
   display: flex;
   justify-content: center;
@@ -6,47 +10,118 @@ body{
 
 .game-board{
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 0fr);
+  grid-template-rows: repeat(3, 0fr);
 }
 
 
 .startpad-outer{
   background-color: var(--color);
-  width: 20vmin;
-  height: 20vmin;
+  width: var(--pad-size);
+  height: var(--pad-size);
+  border-radius: 10%;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .startpad-inner {
   background-color: white;
-  width: 15vmin;
-  height: 15vmin;
-  display: grid;
+  width: calc(0.6*var(--pad-size));
+  height: calc(0.6*var(--pad-size));
+  border-radius: 20%;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
 }
 
-
-.startpad-button-place{
-  background-color: var(--color);
-  width: 3vmin;
-  height: 3vmin;
+.startpad-button{
+  background-color: white;
+  width: calc(0.18*var(--pad-size));
+  height: calc(0.18*var(--pad-size));
+  margin: 1vmin;
   border: 1px solid black;
   border-radius: 50%;
 }
+.startpad-button.button{
+  background-color: var(--color);
+}
 
+.movingpad-container.vertical{
+  grid-template-columns: repeat(3, 0fr);
+  grid-template-rows: repeat(6, 0fr);
+}
 .movingpad-container{
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 0fr);
+  grid-template-rows: repeat(3, 0fr);
+  width: fit-content;
+  height: fit-content;
 }
 
 .movingpad-cell{
   border: 1px solid black;
-  width: 3vmin;
-  height: 3vmin;
+  border-radius: 5%;
+  width: calc(var(--pad-size)/6 - 2px);
+  height: calc(var(--pad-size)/6 - 2px);
+  display: flex;
+  justify-content: center;
+}
+.movingpad-cell.colored{
+  background-color: var(--color);
+}
+
+
+.home{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: calc(var(--pad-size)/2 - 6px);
+  height: calc(var(--pad-size)/2 - 6px);
+}
+.dice {
+  padding: 5%;
+  width: 50%;
+  height: 50%;
+  border: 1px solid #000;
+  background-color: #fff;
+  border-radius: 10%;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Dot style */
+.dot {
+  margin: 5% ;
+  width: 20%;
+  height: 20%;
+  border-radius: 50%;
+  background-color: #000;
+  position: absolute;
+}
+#dot-0, #dot-1, #dot-2 {
+  top: 0%;
+}
+#dot-3, #dot-4, #dot-5 {
+  top: 34%;
+}
+#dot-6, #dot-7, #dot-8 {
+  top: 67%;
+}
+#dot-0, #dot-3, #dot-6 {
+  left: 0%;
+}
+#dot-1, #dot-4, #dot-7 {
+  left: 34%;
+}
+#dot-2, #dot-5, #dot-8 {
+  left: 67%;
+}
+
+/* Dot positioning for each number */
+.invisible {
+  display: none;
+}
+.visible {
+  display: block;
 }
