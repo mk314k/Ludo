@@ -1,4 +1,5 @@
 import {
+  getTokenBoardCoord,
   HOME_STRETCH_COORDS,
   MAIN_TRACK_COORDS,
   SAFE_TRACK_INDICES,
@@ -130,6 +131,32 @@ export function renderLudoBoardSvg(): string {
     </g>
   `;
 
+  const tokensSvg: string[] = [];
+  for (const color of LUDO_COLORS) {
+    const hex = COLOR_HEX[color];
+    for (let idx = 0; idx < 4; idx++) {
+      const tIdx = idx as 0 | 1 | 2 | 3;
+      const coord = getTokenBoardCoord(color, tIdx, -1);
+      const px = coord.col * CELL_SIZE;
+      const py = coord.row * CELL_SIZE;
+      tokensSvg.push(`
+        <g
+          id="token-${color}-${idx}"
+          class="ludo-token"
+          data-color="${color}"
+          data-idx="${idx}"
+          transform="translate(${px.toFixed(1)}, ${py.toFixed(1)})"
+        >
+          <circle class="token-pulse-ring" r="16" fill="none" stroke="#facc15" stroke-width="3" opacity="0" />
+          <circle class="token-shadow" cy="2" r="13" fill="rgba(0,0,0,0.35)" />
+          <circle class="token-body" r="12.5" fill="${hex}" stroke="#fffdf9" stroke-width="2.5" />
+          <circle class="token-inner" r="6" fill="rgba(255,255,255,0.28)" />
+          <text y="3.5" text-anchor="middle" fill="#fffdf9" font-size="9" font-weight="800">${idx + 1}</text>
+        </g>
+      `);
+    }
+  }
+
   return `
     <svg id="ludo-board-svg" viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}" preserveAspectRatio="xMidYMid meet">
       <rect x="0" y="0" width="${SVG_SIZE}" height="${SVG_SIZE}" rx="14" fill="#fdfaf3" stroke="#7a5c3c" stroke-width="4" />
@@ -140,7 +167,7 @@ export function renderLudoBoardSvg(): string {
       ${cellsSvg.join('')}
       ${centerGoalSvg}
       <g id="dest-preview-layer"></g>
-      <g id="tokens-layer"></g>
+      <g id="tokens-layer">${tokensSvg.join('')}</g>
     </svg>
   `;
 }
