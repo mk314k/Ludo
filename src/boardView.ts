@@ -6,7 +6,7 @@ import {
   START_TRACK_INDEX,
   YARD_SLOT_COORDS,
 } from './ludoBoardData';
-import { COLOR_HEX, COLOR_SOFT_HEX, LUDO_COLORS, LudoColor } from './types';
+import { COLOR_HEX, COLOR_SOFT_HEX, LUDO_COLORS, LudoColor, LudoPlayer } from './types';
 
 const CELL_SIZE = 40;
 const SVG_SIZE = CELL_SIZE * 15; // 600x600
@@ -169,5 +169,88 @@ export function renderLudoBoardSvg(): string {
       <g id="dest-preview-layer"></g>
       <g id="tokens-layer">${tokensSvg.join('')}</g>
     </svg>
+  `;
+}
+
+export function renderLudoWorkspaceMarkup(players: LudoPlayer[]): string {
+  const playerCardsHtml = players
+    .map(
+      (p, idx) => `
+      <div class="player-house-card${idx === 0 ? ' active-turn' : ''}" data-color="${p.color}">
+        <div class="house-card-header">
+          <span class="house-swatch" style="background:${COLOR_HEX[p.color]}"></span>
+          <strong class="house-player-name">${p.name}</strong>
+          <span class="house-role-badge">${p.control === 'human' ? 'You' : p.control.replace('bot-', 'AI ')}</span>
+        </div>
+        <div class="house-card-stats">
+          <span id="player-home-count-${p.color}" class="house-stat-pill">${p.finishedCount} / 4 Home</span>
+          <span id="player-capture-count-${p.color}" class="house-capture-pill">⚔️ ${p.captures}</span>
+        </div>
+      </div>
+    `
+    )
+    .join('');
+
+  const diceDotsHtml = Array.from(
+    { length: 9 },
+    (_, idx) => `<div id="dot-${idx}" class="dot ${idx === 4 ? 'visible' : 'invisible'}"></div>`
+  ).join('');
+
+  return `
+    <div class="ludo-shell">
+      <header class="ludo-topbar">
+        <div class="ludo-brand">
+          <h1 id="ludo-header">Ludo Royal</h1>
+          <span class="ludo-subtitle-pill">4-House Pachisi Strategy Edition</span>
+        </div>
+        <div class="ludo-turn-banner">
+          <span id="turn-color-badge" class="turn-color-badge">Crimson House</span>
+          <span id="turn-status-prompt" class="turn-status-prompt">Roll the dice to begin!</span>
+        </div>
+        <div class="ludo-top-actions">
+          <button type="button" id="btn-rules" class="ludo-btn">Rules</button>
+          <button type="button" id="btn-new-match" class="ludo-btn primary">New Match</button>
+        </div>
+      </header>
+
+      <div class="ludo-workspace">
+        <aside class="ludo-sidebar">
+          <section class="ludo-panel">
+            <h2 class="panel-heading">Houses &amp; Standings</h2>
+            <div id="players-roster-panel" class="players-roster-list">
+              ${playerCardsHtml}
+            </div>
+          </section>
+
+          <section class="ludo-panel dice-panel">
+            <h2 class="panel-heading">Royal Dice Roller</h2>
+            <div class="dice-stage-row">
+              <div id="dice-box" class="dice dice-ready" title="Click or press Space to roll">
+                ${diceDotsHtml}
+              </div>
+              <div class="dice-meta">
+                <button type="button" id="btn-roll-dice" class="ludo-btn primary">Roll Dice</button>
+                <span id="dice-roll-readout" class="dice-roll-readout">Ready to roll</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="ludo-panel log-panel">
+            <h2 class="panel-heading">Chronicle Log</h2>
+            <div id="ludo-log-list" class="ludo-log-list">
+              <div class="log-entry">Welcome to Ludo Royal! Roll a 6 to deploy a token from your yard.</div>
+            </div>
+          </section>
+        </aside>
+
+        <main class="ludo-board-stage">
+          <div class="board-frame">
+            ${renderLudoBoardSvg()}
+          </div>
+        </main>
+      </div>
+
+      <div id="ludo-modal-overlay" class="ludo-modal-overlay hidden"></div>
+    </div>
   `;
 }
