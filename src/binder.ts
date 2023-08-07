@@ -1,6 +1,6 @@
-import { StateVarList, StyleVar } from 'statebinderk';
+import { MultiStateVar, StateVarList, StyleVar } from 'statebinderk';
 import { getTokenBoardCoord } from './ludoBoardData';
-import { COLOR_HEX, LUDO_COLORS, LudoColor, LudoToken } from './types';
+import { COLOR_HEX, LUDO_COLORS, LudoColor, LudoToken, TurnStage } from './types';
 
 const CELL_SIZE = 40;
 
@@ -9,6 +9,13 @@ export interface TokenVisualBinding {
   py: number;
   scale: number;
   selectable: boolean;
+}
+
+export interface TurnBannerBinding {
+  activeColor: LudoColor;
+  playerName: string;
+  stage: TurnStage;
+  statusText: string;
 }
 
 export const DICE_PIP_PATTERNS: number[][] = [
@@ -24,6 +31,8 @@ export class LudoBinder {
   public readonly dicePips: StateVarList<number>;
   public readonly diceBorderColor: StyleVar<string>;
   public readonly tokenPositions: StateVarList<TokenVisualBinding>;
+  public readonly playerFinishedCounts: StateVarList<number>;
+  public readonly turnBanner: MultiStateVar<TurnBannerBinding>;
   private readonly tokenIndexMap: Map<string, number> = new Map();
 
   public constructor() {
@@ -84,6 +93,53 @@ export class LudoBinder {
         }
       }
     );
+
+    const finishedInit = LUDO_COLORS.map((c) => ({
+      id: `player-home-count-${c}`,
+      state: 0,
+    }));
+    this.playerFinishedCounts = new StateVarList<number>(
+      finishedInit,
+      (el, count) => {
+        el.textContent = `${count} / 4 Home`;
+      }
+    );
+
+    this.turnBanner = new MultiStateVar<TurnBannerBinding>({
+      activeColor: 'red',
+      playerName: 'Crimson House',
+      stage: 'waiting-for-roll',
+      statusText: 'Roll the dice to begin!',
+    });
+
+    this.turnBanner.addBinding('turn-color-badge', (el, st) => {
+      el.textContent = st.playerName;
+      el.style.backgroundColor = COLOR_HEX[st.activeColor];
+    });
+
+    this.turnBanner.addBinding('turn-status-prompt', (el, st) => {
+      el.textContent = st.statusText;
+    });
+
+    this.turnBanner.addBinding('players-roster-panel', (el, st) => {
+      const cards = el.querySelectorAll('.player-house-card');
+      cards.forEach((card) => {
+        const cardColor = card.getAttribute('data-color');
+        if (cardColor === st.activeColor) {
+          card.classList.add('active-turn');
+        } else {
+          card.classList.remove('active-turn');
+        }
+      });
+    });
+
+    this.turnBanner.addBinding('dice-box', (el, st) => {
+      if (st.stage === 'waiting-for-roll') {
+        el.classList.add('dice-ready');
+      } else {
+        el.classList.remove('dice-ready');
+      }
+    });
   }
 
   public syncDice(value: number, activeColor: LudoColor): void {
