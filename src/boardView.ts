@@ -254,3 +254,30 @@ export function renderLudoWorkspaceMarkup(players: LudoPlayer[]): string {
     </div>
   `;
 }
+
+export function showDestinationPreview(
+  color: LudoColor,
+  tokenIdx: 0 | 1 | 2 | 3,
+  targetStep: number
+): void {
+  const layer = document.getElementById('dest-preview-layer');
+  if (!layer) return;
+  const coord = getTokenBoardCoord(color, tokenIdx, targetStep);
+  const cx = coord.col * CELL_SIZE;
+  const cy = coord.row * CELL_SIZE;
+  const hex = COLOR_HEX[color];
+
+  layer.innerHTML = `
+    <g class="dest-preview-marker" transform="translate(${cx.toFixed(1)}, ${cy.toFixed(1)})">
+      <circle r="15" fill="${hex}" opacity="0.28" />
+      <circle r="15" fill="none" stroke="${hex}" stroke-width="2.5" stroke-dasharray="4,3" />
+    </g>
+  `;
+}
+
+export function clearDestinationPreview(): void {
+  const layer = document.getElementById('dest-preview-layer');
+  if (layer) {
+    layer.innerHTML = '';
+  }
+}
