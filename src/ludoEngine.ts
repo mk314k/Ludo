@@ -1,4 +1,5 @@
 import { LudoBinder } from './binder';
+import { SAFE_TRACK_INDICES, stepToGlobalTrackIndex } from './ludoBoardData';
 import {
   LUDO_COLORS,
   LudoColor,
@@ -114,15 +115,48 @@ export class LudoGameEngine {
           });
         }
       } else if (token.step + diceValue <= 56) {
+        const nextStep = token.step + diceValue;
+        const globalIdx = stepToGlobalTrackIndex(color, nextStep);
+        const landsOnStar = globalIdx !== null && SAFE_TRACK_INDICES.has(globalIdx);
         options.push({
           tokenId: token.id,
           tokenIdx: token.tokenIdx,
           fromStep: token.step,
-          toStep: token.step + diceValue,
+          toStep: nextStep,
+          willFinish: nextStep === 56,
+          landsOnStar,
         });
       }
     }
     return options;
+  }
+
+  public executeMove(tokenId: string): boolean {
+    if (this.stage !== 'waiting-for-move') return false;
+    const option = this.availableMoves.find((m) => m.tokenId === tokenId);
+    if (!option) return false;
+
+    const token = this.tokens.find((t) => t.id === tokenId);
+    if (!token) return false;
+
+    const player = this.activePlayer;
+    token.step = option.toStep;
+    this.availableMoves = [];
+
+    if (option.fromStep === -1) {
+      this.appendLog(`${player.name} deployed Token #${token.tokenIdx + 1} onto the starting star!`);
+    } else {
+      this.appendLog(`${player.name} advanced Token #${token.tokenIdx + 1} by ${this.currentDice} steps.`);
+    }
+
+    if (this.currentDice === 6) {
+      this.stage = 'waiting-for-roll';
+      this.syncUI(`${player.name} rolled a 6 — Bonus Roll!`);
+      return true;
+    }
+
+    this.advanceToNextPlayer();
+    return true;
   }
 
   public advanceToNextPlayer(): void {
