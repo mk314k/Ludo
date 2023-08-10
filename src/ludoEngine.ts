@@ -118,17 +118,31 @@ export class LudoGameEngine {
         const nextStep = token.step + diceValue;
         const globalIdx = stepToGlobalTrackIndex(color, nextStep);
         const landsOnStar = globalIdx !== null && SAFE_TRACK_INDICES.has(globalIdx);
+        const captured = this.getCapturableOpponentsAt(color, nextStep);
         options.push({
           tokenId: token.id,
           tokenIdx: token.tokenIdx,
           fromStep: token.step,
           toStep: nextStep,
+          willCapture: captured.length > 0,
           willFinish: nextStep === 56,
           landsOnStar,
         });
       }
     }
     return options;
+  }
+
+  public getCapturableOpponentsAt(moverColor: LudoColor, targetStep: number): LudoToken[] {
+    const globalIdx = stepToGlobalTrackIndex(moverColor, targetStep);
+    if (globalIdx === null || SAFE_TRACK_INDICES.has(globalIdx)) {
+      return [];
+    }
+    return this.tokens.filter((other) => {
+      if (other.color === moverColor) return false;
+      const otherGlobal = stepToGlobalTrackIndex(other.color, other.step);
+      return otherGlobal === globalIdx;
+    });
   }
 
   public executeMove(tokenId: string): boolean {
@@ -140,18 +154,34 @@ export class LudoGameEngine {
     if (!token) return false;
 
     const player = this.activePlayer;
+    const victims = this.getCapturableOpponentsAt(player.color, option.toStep);
     token.step = option.toStep;
     this.availableMoves = [];
 
-    if (option.fromStep === -1) {
+    let earnedBonusTurn = this.currentDice === 6;
+
+    if (victims.length > 0) {
+      for (const victim of victims) {
+        victim.step = -1;
+      }
+      player.captures += victims.length;
+      earnedBonusTurn = true;
+      const capEl = document.getElementById(`player-capture-count-${player.color}`);
+      if (capEl) {
+        capEl.textContent = `⚔️ ${player.captures}`;
+      }
+      this.appendLog(
+        `⚔️ ${player.name} captured ${victims[0].color.toUpperCase()} Token #${victims[0].tokenIdx + 1} and earned a Bonus Roll!`
+      );
+    } else if (option.fromStep === -1) {
       this.appendLog(`${player.name} deployed Token #${token.tokenIdx + 1} onto the starting star!`);
     } else {
       this.appendLog(`${player.name} advanced Token #${token.tokenIdx + 1} by ${this.currentDice} steps.`);
     }
 
-    if (this.currentDice === 6) {
+    if (earnedBonusTurn) {
       this.stage = 'waiting-for-roll';
-      this.syncUI(`${player.name} rolled a 6 — Bonus Roll!`);
+      this.syncUI(`${player.name} earned a Bonus Roll — Roll again!`);
       return true;
     }
 
