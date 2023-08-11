@@ -160,7 +160,18 @@ export class LudoGameEngine {
 
     let earnedBonusTurn = this.currentDice === 6;
 
-    if (victims.length > 0) {
+    if (option.willFinish) {
+      player.finishedCount = this.tokens.filter((t) => t.color === player.color && t.step >= 56).length;
+      earnedBonusTurn = true;
+      this.appendLog(
+        `🏠 ${player.name}'s Token #${token.tokenIdx + 1} reached the center Home Goal (${player.finishedCount}/4)!`
+      );
+      if (player.finishedCount >= 4 && !player.rank) {
+        const assignedRanks = this.players.filter((p) => p.rank !== undefined).length;
+        player.rank = assignedRanks + 1;
+        this.appendLog(`🏆 ${player.name} finished all 4 tokens in #${player.rank} place!`);
+      }
+    } else if (victims.length > 0) {
       for (const victim of victims) {
         victim.step = -1;
       }
@@ -179,7 +190,7 @@ export class LudoGameEngine {
       this.appendLog(`${player.name} advanced Token #${token.tokenIdx + 1} by ${this.currentDice} steps.`);
     }
 
-    if (earnedBonusTurn) {
+    if (earnedBonusTurn && (player.finishedCount < 4)) {
       this.stage = 'waiting-for-roll';
       this.syncUI(`${player.name} earned a Bonus Roll — Roll again!`);
       return true;
