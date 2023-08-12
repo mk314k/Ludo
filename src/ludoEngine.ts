@@ -193,6 +193,7 @@ export class LudoGameEngine {
     if (earnedBonusTurn && (player.finishedCount < 4)) {
       this.stage = 'waiting-for-roll';
       this.syncUI(`${player.name} earned a Bonus Roll — Roll again!`);
+      this.scheduleBotTurnIfNeeded();
       return true;
     }
 
@@ -203,10 +204,71 @@ export class LudoGameEngine {
   public advanceToNextPlayer(): void {
     this.consecutiveSixes = 0;
     this.availableMoves = [];
+
+    const unfinished = this.players.filter((p) => p.finishedCount < 4);
+    if (unfinished.length <= 1) {
+      this.stage = 'game-over';
+      this.syncUI('🏆 Match Complete! View final standings.');
+      return;
+    }
+
+    let tries = 0;
+    do {
+      this.activePlayerIdx = (this.activePlayerIdx + 1) % this.players.length;
+      tries += 1;
+    } while (this.players[this.activePlayerIdx].finishedCount >= 4 && tries < this.players.length);
+
     this.stage = 'waiting-for-roll';
-    this.activePlayerIdx = (this.activePlayerIdx + 1) % this.players.length;
     const next = this.activePlayer;
     this.syncUI(`${next.name}'s turn — Roll the dice!`);
+    this.scheduleBotTurnIfNeeded();
+  }
+
+  public scheduleBotTurnIfNeeded(): void {
+    if (this.stage === 'game-over') return;
+    const player = this.activePlayer;
+    if (!player.control.startsWith('bot-')) return;
+
+    window.setTimeout(() => {
+      if (this.stage === 'waiting-for-roll' && this.activePlayer.color === player.color) {
+        this.rollDice();
+        window.setTimeout(() => {
+          if (this.stage === 'waiting-for-move' && this.activePlayer.color === player.color) {
+            const chosen = this.chooseBestBotMove(player, this.availableMoves);
+            if (chosen) {
+              this.executeMove(chosen.tokenId);
+            }
+          }
+        }, 420);
+      }
+    }, 520);
+  }
+
+  public chooseBestBotMove(bot: LudoPlayer, moves: LudoMoveOption[]): LudoMoveOption | null {
+    if (moves.length === 0) return null;
+
+    const scored = moves.map((m) => {
+      let score = m.toStep * 1.2;
+      if (m.fromStep === -1) score += 45;
+      if (m.willFinish) score += 80;
+
+      if (bot.control === 'bot-aggressive') {
+        if (m.willCapture) score += 95;
+        if (m.landsOnStar) score += 20;
+      } else if (bot.control === 'bot-safe') {
+        if (m.landsOnStar) score += 75;
+        if (m.toStep >= 51) score += 50;
+        if (m.willCapture) score += 45;
+      } else {
+        if (m.willCapture) score += 70;
+        if (m.landsOnStar) score += 45;
+        if (m.toStep >= 51) score += 35;
+      }
+      return { move: m, score };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored[0].move;
   }
 
   public syncUI(statusText: string): void {
