@@ -281,3 +281,30 @@ export function clearDestinationPreview(): void {
     layer.innerHTML = '';
   }
 }
+
+export function openLudoRulesModal(): void {
+  const modal = document.getElementById('ludo-modal-overlay');
+  if (!modal) return;
+
+  modal.innerHTML = `
+    <div class="ludo-modal-card">
+      <h3>🎲 Ludo Royal — Pachisi Rules</h3>
+      <div class="mp-section">
+        <ul>
+          <li><strong>Deploying from Yard:</strong> Roll a <strong>6</strong> to move a token from your corner yard onto your colored starting star.</li>
+          <li><strong>Bonus Rolls:</strong> Rolling a <strong>6</strong>, capturing an opponent's token, or reaching the center Home Goal awards an immediate bonus roll!</li>
+          <li><strong>Three 6s Limit:</strong> Rolling three consecutive 6s forfeits your turn.</li>
+          <li><strong>Safe Stars (★):</strong> The 4 colored starting squares and 4 mid-arm star squares protect all tokens on them from capture.</li>
+          <li><strong>Exact Home Entry:</strong> Tokens must roll the exact remaining steps to enter the center Home triangle.</li>
+        </ul>
+      </div>
+      <div class="ludo-modal-actions">
+        <button type="button" id="btn-close-rules" class="ludo-btn primary">Got It</button>
+      </div>
+    </div>
+  `;
+  modal.classList.remove('hidden');
+  document.getElementById('btn-close-rules')?.addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+}
