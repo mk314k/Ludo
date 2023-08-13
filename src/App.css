@@ -322,3 +322,56 @@
 .hidden {
   display: none !important;
 }
+
+.ludo-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.ludo-modal-card {
+  width: min(560px, 92vw);
+  background: var(--bg-panel);
+  color: var(--text-light);
+  border: 2px solid var(--accent-gold);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.55);
+}
+
+.ludo-modal-sub {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.ludo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.ludo-table th,
+.ludo-table td {
+  border: 1px solid var(--border-gold);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.ludo-table th {
+  background: var(--bg-surface);
+  color: var(--accent-gold);
+  font-weight: 800;
+}
+
+.ludo-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

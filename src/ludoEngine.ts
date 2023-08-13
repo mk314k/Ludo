@@ -1,6 +1,7 @@
 import { LudoBinder } from './binder';
 import { SAFE_TRACK_INDICES, stepToGlobalTrackIndex } from './ludoBoardData';
 import {
+  COLOR_HEX,
   LUDO_COLORS,
   LudoColor,
   LudoMoveOption,
@@ -8,6 +9,8 @@ import {
   LudoToken,
   TurnStage,
 } from './types';
+
+const STORAGE_KEY = 'ludo_royal.save.v1';
 
 export class LudoGameEngine {
   public players: LudoPlayer[];
@@ -207,8 +210,12 @@ export class LudoGameEngine {
 
     const unfinished = this.players.filter((p) => p.finishedCount < 4);
     if (unfinished.length <= 1) {
+      if (unfinished.length === 1 && !unfinished[0].rank) {
+        unfinished[0].rank = this.players.length;
+      }
       this.stage = 'game-over';
       this.syncUI('🏆 Match Complete! View final standings.');
+      this.showWinCelebrationModal();
       return;
     }
 
@@ -284,5 +291,88 @@ export class LudoGameEngine {
       stage: this.stage,
       statusText,
     });
+    this.saveToStorage();
+  }
+
+  public showWinCelebrationModal(): void {
+    const modal = document.getElementById('ludo-modal-overlay');
+    if (!modal) return;
+    const sorted = [...this.players].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99) || b.finishedCount - a.finishedCount);
+    const rowsHtml = sorted
+      .map(
+        (p, idx) => `
+        <tr>
+          <td>#${p.rank ?? idx + 1}</td>
+          <td><span class="house-swatch" style="display:inline-block;background:${COLOR_HEX[p.color]};margin-right:6px"></span><strong>${p.name}</strong></td>
+          <td>${p.finishedCount} / 4</td>
+          <td>⚔️ ${p.captures}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    modal.innerHTML = `
+      <div class="ludo-modal-card">
+        <h3>🏆 Royal Pachisi — Final Standings</h3>
+        <p class="ludo-modal-sub">Champion: <strong>${sorted[0].name}</strong>!</p>
+        <table class="ludo-table">
+          <thead>
+            <tr><th>Rank</th><th>House</th><th>Home</th><th>Captures</th></tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div class="ludo-modal-actions">
+          <button type="button" id="btn-close-win-modal" class="ludo-btn primary">Close</button>
+        </div>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+    document.getElementById('btn-close-win-modal')?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  }
+
+  public saveToStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const payload = {
+        players: this.players,
+        tokens: this.tokens,
+        activePlayerIdx: this.activePlayerIdx,
+        stage: this.stage === 'waiting-for-move' ? 'waiting-for-roll' : this.stage,
+        currentDice: this.currentDice,
+      };
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore storage quota errors
+    }
+  }
+
+  public restoreFromStorage(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.tokens) || parsed.tokens.length !== 16) return false;
+      this.players = Array.isArray(parsed.players) ? parsed.players : this.players;
+      this.tokens = parsed.tokens;
+      this.activePlayerIdx = typeof parsed.activePlayerIdx === 'number' ? parsed.activePlayerIdx : 0;
+      this.stage = parsed.stage ?? 'waiting-for-roll';
+      this.currentDice = parsed.currentDice ?? 1;
+      this.syncUI(`Resumed match — ${this.activePlayer.name}'s turn.`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public static clearSavedMatch(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
 }
